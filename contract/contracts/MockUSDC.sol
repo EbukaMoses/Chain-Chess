@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MockUSDC is ERC20, Ownable {
     uint8 private _decimals = 6; // USDC has 6 decimals
 
-    constructor() ERC20("Mock USDC", "mUSDC") Ownable(msg.sender) {
+    constructor() ERC20("Mock USDC", "mUSDC") Ownable() {
         // Mint initial supply to deployer
         _mint(msg.sender, 1000000 * 10**6); // 1 million USDC
     }

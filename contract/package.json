@@ -21,5 +21,8 @@
     "hardhat": "^2.26.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
   }
 }

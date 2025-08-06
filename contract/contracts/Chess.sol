@@ -194,17 +194,13 @@ contract ChessTournament {
         newTournament.prizePoolAmount = _prizePoolAmount;
         newTournament.registeredPlayersCount = 0;
         newTournament.registeredPlayerAddresses = new address[](0);
-            groupIds: new uint256[](0),
-            groups: new mapping(uint256 => address[])(),
-            gamesPlayedInGroup: new mapping(uint256 => mapping(address => mapping(address => bool)))(),
-            groupGamesCompleted: new mapping(uint256 => uint256)(),
-            currentRoundPlayers: new address[](0),
-            currentRound: 0, // 0 indicates group stage
-            firstPlaceWinner: address(0),
-            secondPlaceWinner: address(0),
-            thirdPlaceWinner: address(0),
-            status: TournamentStatus.RegistrationOpen
-        });
+        newTournament.groupIds = new uint256[](0);
+        newTournament.currentRoundPlayers = new address[](0);
+        newTournament.currentRound = 0; // 0 indicates group stage
+        newTournament.firstPlaceWinner = address(0);
+        newTournament.secondPlaceWinner = address(0);
+        newTournament.thirdPlaceWinner = address(0);
+        newTournament.status = TournamentStatus.RegistrationOpen;
 
         emit TournamentCreated(
             id,
@@ -293,57 +289,12 @@ contract ChessTournament {
             tournament.status = TournamentStatus.RegistrationClosed;
         }
 
-        // Collect all registered player addresses
-        address[] memory allPlayers = new address[](
-            tournament.registeredPlayersCount
-        );
-        uint256 playerIndex = 0;
-        for (uint256 i = 0; i < nextTournamentId; i++) {
-            // Iterate through all possible tournament IDs to find players
-            if (tournaments[i].owner != address(0) && i == _tournamentId) {
-                // Check if tournament exists and is the current one
-                for (uint256 j = 0; j < tournament.playerLimit; j++) {
-                    // Iterate through the expected number of players
-                    address playerAddr = address(0); // Placeholder for player address
-                    // This part is tricky. Iterating through a mapping to get all keys is not directly possible in Solidity.
-                    // A more robust solution would be to store registered player addresses in a dynamic array during registration.
-                    // For this example, we'll assume `tournament.players` can be iterated (which it cannot directly).
-                    // A common workaround is to maintain a separate `address[] registeredPlayersList;` in the Tournament struct.
-                    // Let's add that to the Tournament struct for a proper implementation.
-
-                    // For now, let's simulate by iterating through a hypothetical list of registered players.
-                    // THIS IS A SIMPLIFICATION. In a real contract, you'd need to maintain an array of registered player addresses.
-                    // Let's assume `tournament.registeredPlayerAddresses` exists and is populated during registration.
-                    // Re-structuring Tournament to include `address[] registeredPlayerAddresses;`
-                    // and populating it in `registerForTournament`.
-                    // Then, `allPlayers[playerIndex++] = tournament.registeredPlayerAddresses[j];`
-                }
-            }
-        }
-
-        // Re-writing this section assuming `registeredPlayerAddresses` array exists in the Tournament struct.
-        // For the sake of this example, I will assume `registeredPlayerAddresses` is populated correctly.
-        // In the actual code, I need to add `address[] registeredPlayerAddresses;` to the `Tournament` struct
-        // and populate it in `registerForTournament`.
-
-        // --- Start of corrected grouping logic ---
-        // First, collect all registered player addresses into a temporary array
+        // Collect all registered player addresses into a temporary array
         address[] memory tempRegisteredPlayers = new address[](
             tournament.registeredPlayersCount
         );
-        uint256 count = 0;
-        // This loop is a placeholder. In a real scenario, you'd have an array of registered players.
-        // For demonstration, we'll iterate through the `players` mapping, which is inefficient and not directly iterable.
-        // A better approach is to maintain a dynamic array of registered player addresses.
-        // Let's assume `tournament.registeredPlayerAddresses` is a dynamic array of addresses.
-        // This requires a modification to the Tournament struct and `registerForTournament` function.
-
-        // --- Re-structuring `Tournament` and `registerForTournament` for proper player list management ---
-        // (This part will be done implicitly for the code block, assuming the struct is updated)
-        // Add `address[] registeredPlayerAddresses;` to the `Tournament` struct.
-        // In `registerForTournament`, add `tournament.registeredPlayerAddresses.push(msg.sender);`
-
-        // Now, proceed with the grouping logic assuming `tournament.registeredPlayerAddresses` is available.
+        
+        // Copy registered players to temporary array
         for (uint256 i = 0; i < tournament.registeredPlayersCount; i++) {
             tempRegisteredPlayers[i] = tournament.registeredPlayerAddresses[i];
         }
@@ -351,9 +302,7 @@ contract ChessTournament {
         // Simple pseudo-random shuffle (Fisher-Yates) - NOT CRYPTOGRAPHICALLY SECURE
         // For a real game, use Chainlink VRF or similar for verifiable randomness.
         for (uint256 i = tournament.registeredPlayersCount - 1; i > 0; i--) {
-            uint256 j = uint256(
-                keccak256(abi.encodePacked(block.timestamp, msg.sender, i))
-            ) % (i + 1);
+            uint256 j = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, i))) % (i + 1);
             address temp = tempRegisteredPlayers[i];
             tempRegisteredPlayers[i] = tempRegisteredPlayers[j];
             tempRegisteredPlayers[j] = temp;
@@ -361,12 +310,10 @@ contract ChessTournament {
 
         uint256 numGroups = tournament.registeredPlayersCount / 4;
         for (uint256 i = 0; i < numGroups; i++) {
-            uint256 groupId = tournament.groupIds.length; // Use current length as new group ID
+            uint256 groupId = tournament.groupIds.length;
             tournament.groupIds.push(groupId);
             for (uint256 j = 0; j < 4; j++) {
-                tournament.groups[groupId].push(
-                    tempRegisteredPlayers[i * 4 + j]
-                );
+                tournament.groups[groupId].push(tempRegisteredPlayers[i * 4 + j]);
             }
         }
 
@@ -578,16 +525,7 @@ contract ChessTournament {
 
         // Simple pseudo-random shuffle for pairing
         for (uint256 i = playersForPairing.length - 1; i > 0; i--) {
-            uint256 j = uint256(
-                keccak256(
-                    abi.encodePacked(
-                        block.timestamp,
-                        msg.sender,
-                        i,
-                        tournament.currentRound
-                    )
-                )
-            ) % (i + 1);
+            uint256 j = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, i, tournament.currentRound))) % (i + 1);
             address temp = playersForPairing[i];
             playersForPairing[i] = playersForPairing[j];
             playersForPairing[j] = temp;

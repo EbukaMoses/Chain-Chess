@@ -127,11 +127,15 @@ export const createTournament = async (
     endTime: Date
 ) => {
     try {
-        const { chessTournamentContract } = getContracts()
+        const { chessTournamentContract, mockUsdcContract } = getContracts()
 
         const startTimestamp = Math.floor(startTime.getTime() / 1000)
         const endTimestamp = Math.floor(endTime.getTime() / 1000)
         const prizePoolWei = ethers.parseUnits(prizePool.toString(), 6) // USDC has 6 decimals
+
+        // First, approve the tournament contract to spend USDC
+        const approveTx = await mockUsdcContract.approve(CHESS_TOURNAMENT_ADDRESS, prizePoolWei)
+        await approveTx.wait()
 
         const tx = await chessTournamentContract.createTournament(
             name,
@@ -195,7 +199,7 @@ export const registerForTournament = async (tournamentId: number, username: stri
     try {
         const { chessTournamentContract } = getContracts()
 
-        const tx = await chessTournamentContract.registerForTournament(tournamentId, username)
+        const tx = await chessTournamentContract.registerForTournament(tournamentId, username, "Unknown")
         const receipt = await tx.wait()
 
         return { success: true, transactionHash: receipt.hash }

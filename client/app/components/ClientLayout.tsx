@@ -3,29 +3,22 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-
-// Type for the Ethereum provider
-type EthereumProvider = {
-    isMetaMask?: boolean;
-    request: (request: { method: string; params?: any[] }) => Promise<any>;
-    on: (eventName: string, callback: (...args: any[]) => void) => void;
-    removeListener?: (eventName: string, callback: (...args: any[]) => void) => void;
-    off?: (eventName: string, callback: (...args: any[]) => void) => void;
-    isConnected: () => boolean;
-    selectedAddress: string | null;
-};
-
-declare global {
-    interface Window {
-        ethereum?: EthereumProvider;
-    }
-}
+import { useContract } from '../../contexts/ContractContext';
+import { loadDeploymentConfig } from '../../lib/config';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const [isWalletConnected, setIsWalletConnected] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [stablecoinBalance, setStablecoinBalance] = useState<number>(0);
     const pathname = usePathname();
+
+    const {
+        isInitialized,
+        initializeContracts,
+        getUSDCBalance,
+        mintUSDC
+    } = useContract();
 
     // Check if wallet is connected on component mount and when path changes
     useEffect(() => {
@@ -55,6 +48,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 // User disconnected wallet
                 setIsWalletConnected(false);
                 setWalletAddress('');
+                setStablecoinBalance(0);
             } else if (accounts[0] !== walletAddress) {
                 // Account changed
                 setWalletAddress(accounts[0]);
@@ -72,18 +66,27 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 // Add event listener for account changes
                 ethereum.on('accountsChanged', handleAccountsChanged);
 
+                // Add event listener for network changes
+                ethereum.on('chainChanged', (chainId: string) => {
+                    const sepoliaChainId = '0xaa36a7';
+                    if (chainId !== sepoliaChainId) {
+                        alert('Please switch to Sepolia testnet to use this application');
+                        // Optionally auto-switch back to Sepolia
+                        ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: sepoliaChainId }],
+                        }).catch(() => {
+                            // User rejected the switch
+                        });
+                    }
+                });
+
                 // Cleanup function
                 return () => {
                     try {
-                        // Try to remove the event listener
-                        if (ethereum.removeListener) {
-                            ethereum.removeListener('accountsChanged', handleAccountsChanged);
-                        } else if (ethereum.off) {
-                            ethereum.off('accountsChanged', handleAccountsChanged);
-                        } else {
-                            // As a last resort, remove all listeners
-                            ethereum.removeAllListeners?.('accountsChanged');
-                        }
+                        // Remove all listeners for accountsChanged and chainChanged
+                        ethereum.removeAllListeners('accountsChanged');
+                        ethereum.removeAllListeners('chainChanged');
                     } catch (error) {
                         console.error('Error cleaning up event listener:', error);
                     }
@@ -95,18 +98,92 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
         // Return empty cleanup function if ethereum is not available
         return () => { };
-    }, [pathname]);
+    }, [pathname, walletAddress, isWalletConnected]);
+
+    // Initialize contracts when wallet is connected
+    useEffect(() => {
+        if (isWalletConnected && !isInitialized) {
+            // Load deployment configuration
+            const config = loadDeploymentConfig();
+            const { ChessTournament: tournamentAddress, MockUSDC: usdcAddress } = config.contracts;
+
+            // Initialize contracts
+            initializeContracts(tournamentAddress, usdcAddress).catch(console.error);
+        }
+    }, [isWalletConnected, isInitialized, initializeContracts]);
+
+    // Fetch balance when wallet is connected and contracts are initialized
+    useEffect(() => {
+        const fetchBalance = async () => {
+            if (isWalletConnected && walletAddress && isInitialized) {
+                try {
+                    const balance = await getUSDCBalance(walletAddress);
+                    setStablecoinBalance(balance);
+                } catch (error) {
+                    console.error('Error fetching balance:', error);
+                    setStablecoinBalance(0);
+                }
+            }
+        };
+
+        fetchBalance();
+    }, [isWalletConnected, walletAddress, isInitialized, getUSDCBalance]);
 
     const connectWallet = async () => {
         if (typeof window !== 'undefined' && window.ethereum) {
             try {
+                // First, request accounts
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
                 if (accounts.length > 0) {
+                    // Check current network
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    const sepoliaChainId = '0xaa36a7'; // Sepolia testnet chain ID
+
+                    if (chainId !== sepoliaChainId) {
+                        // Switch to Sepolia testnet
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: sepoliaChainId }],
+                            });
+                        } catch (switchError: any) {
+                            // If Sepolia is not added to MetaMask, add it
+                            if (switchError.code === 4902) {
+                                try {
+                                    await window.ethereum.request({
+                                        method: 'wallet_addEthereumChain',
+                                        params: [{
+                                            chainId: sepoliaChainId,
+                                            chainName: 'Sepolia Testnet',
+                                            nativeCurrency: {
+                                                name: 'Sepolia Ether',
+                                                symbol: 'SEP',
+                                                decimals: 18
+                                            },
+                                            rpcUrls: ['https://sepolia.infura.io/v3/'],
+                                            blockExplorerUrls: ['https://sepolia.etherscan.io/']
+                                        }],
+                                    });
+                                } catch (addError) {
+                                    console.error('Error adding Sepolia network:', addError);
+                                    alert('Please add Sepolia testnet to your wallet manually');
+                                    return;
+                                }
+                            } else {
+                                console.error('Error switching to Sepolia:', switchError);
+                                alert('Please switch to Sepolia testnet manually');
+                                return;
+                            }
+                        }
+                    }
+
                     setIsWalletConnected(true);
                     setWalletAddress(accounts[0]);
                 }
             } catch (error) {
                 console.error('Error connecting wallet:', error);
+                alert('Failed to connect wallet. Please try again.');
             }
         } else {
             alert('Please install MetaMask or another Web3 provider');
@@ -116,7 +193,29 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const disconnectWallet = () => {
         setIsWalletConnected(false);
         setWalletAddress('');
-        // No need to reload the page, state will update automatically
+        setStablecoinBalance(0);
+    };
+
+    const handleDiscount = async () => {
+        if (!isWalletConnected || !walletAddress) {
+            alert('Please connect your wallet first');
+            return;
+        }
+
+        try {
+            const success = await mintUSDC(1000); // Mint 1000 USDC
+            if (success) {
+                // Refresh balance
+                const newBalance = await getUSDCBalance(walletAddress);
+                setStablecoinBalance(newBalance);
+                alert('Successfully minted 1000 USDC!');
+            } else {
+                alert('Failed to mint USDC. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error minting USDC:', error);
+            alert('Error minting USDC. Please try again.');
+        }
     };
 
     if (isLoading) {
@@ -146,6 +245,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     >
                         Tournaments
                     </Link>
+                    <Link
+                        href="/game/new"
+                        className={`${pathname.startsWith('/game') ? 'text-white' : 'text-white/80 hover:text-white'} transition-colors`}
+                    >
+                        Play Chess
+                    </Link>
                     {isWalletConnected && (
                         <Link
                             href="/dashboard"
@@ -155,12 +260,29 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                         </Link>
                     )}
                 </div>
-                <div>
+                <div className="flex items-center space-x-4">
+                    {isWalletConnected && (
+                        <>
+                            <button
+                                onClick={handleDiscount}
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                            >
+                                Get 1000 USDC
+                            </button>
+                            <div className="bg-white/10 text-white px-4 py-2 rounded-xl font-mono text-sm">
+                                USDC: {stablecoinBalance.toFixed(2)}
+                            </div>
+                        </>
+                    )}
                     {isWalletConnected ? (
                         <div className="flex items-center space-x-4">
-                            {/* <span className="text-sm text-white/70 hidden md:inline">
+                            <div className="flex items-center space-x-2 bg-green-600/20 text-green-300 px-3 py-1 rounded-full text-xs font-medium border border-green-500/30">
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span>Sepolia</span>
+                            </div>
+                            <span className="text-sm text-white/70 hidden md:inline">
                                 {`${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`}
-                            </span> */}
+                            </span>
                             <button
                                 onClick={disconnectWallet}
                                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
@@ -173,7 +295,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                             onClick={connectWallet}
                             className="bg-[#6D9A4C] hover:bg-[#8BB563] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
-                            Connect Wallet
+                            Connect Wallet (Sepolia)
                         </button>
                     )}
                 </div>

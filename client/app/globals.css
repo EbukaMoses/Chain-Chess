@@ -247,6 +247,88 @@ body {
   @apply grid gap-6 md:grid-cols-2 lg:grid-cols-3;
 }
 
+/* Tournament cards */
+.tournament-card {
+  @apply glass-strong rounded-2xl p-6 border border-white/10 hover:border-[#6D9A4C]/30 transition-all duration-300 hover:shadow-2xl hover:shadow-[#6D9A4C]/10 hover:-translate-y-1 relative overflow-hidden;
+}
+
+.tournament-card::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-br from-[#6D9A4C]/5 to-[#8BB563]/5 opacity-0 transition-opacity duration-300;
+}
+
+.tournament-card:hover::before {
+  @apply opacity-100;
+}
+
+.tournament-header {
+  @apply flex justify-between items-start mb-4 relative z-10;
+}
+
+.tournament-name {
+  @apply text-xl font-bold gradient-text-white mb-2;
+}
+
+.tournament-status {
+  @apply px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm;
+}
+
+.tournament-status.registration {
+  @apply bg-[#6D9A4C]/20 text-[#8BB563] border border-[#6D9A4C]/30;
+}
+
+.tournament-status.in-progress {
+  @apply bg-[#8BB563]/20 text-[#9BC573] border border-[#8BB563]/30;
+}
+
+.tournament-status.completed {
+  @apply bg-white/10 text-white/80 border border-white/20;
+}
+
+.tournament-description {
+  @apply text-white/70 text-sm mb-6 leading-relaxed relative z-10;
+}
+
+.tournament-details {
+  @apply space-y-3 mb-6 relative z-10;
+}
+
+.tournament-detail {
+  @apply flex justify-between items-center;
+}
+
+.detail-label {
+  @apply text-white/50 text-sm font-medium;
+}
+
+.detail-value {
+  @apply text-white font-semibold;
+}
+
+.tournament-prize {
+  @apply text-2xl font-bold gradient-text mb-2 relative z-10;
+}
+
+.tournament-progress {
+  @apply w-full bg-white/10 rounded-full h-2 mb-4 relative z-10;
+}
+
+.tournament-progress-fill {
+  @apply bg-gradient-to-r from-[#6D9A4C] to-[#8BB563] h-2 rounded-full transition-all duration-300 shadow-sm;
+}
+
+.tournament-meta {
+  @apply flex items-center justify-between text-sm text-white/60 mb-4 relative z-10;
+}
+
+.tournament-date {
+  @apply flex items-center space-x-1;
+}
+
+.tournament-players {
+  @apply flex items-center space-x-1;
+}
+
 /* Hero section */
 .hero-section {
   @apply text-center py-20 px-4;

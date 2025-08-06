@@ -191,12 +191,20 @@ export default function DashboardPage() {
                         Created
                     </button>
                 </div>
-                <Link
-                    href="/tournaments/create"
-                    className="text-sm bg-[#6D9A4C] hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                    Create New
-                </Link>
+                <div className="flex gap-2">
+                    <Link
+                        href="/game/new"
+                        className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                        Play Chess
+                    </Link>
+                    <Link
+                        href="/tournaments/create"
+                        className="text-sm bg-[#6D9A4C] hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                        Create New
+                    </Link>
+                </div>
             </div>
 
             {/* Section Title */}
