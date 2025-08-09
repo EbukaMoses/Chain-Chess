@@ -12,8 +12,8 @@ export interface DeploymentConfig {
 // RPC Configuration
 export const RPC_CONFIG = {
     sepolia: {
-        // Using your Alchemy API key
-        url: 'https://eth-sepolia.g.alchemy.com/v2/w5YTzXeRQZB4YgguIHj-D2yotqekW4yi',
+        // Using public Sepolia RPC (no rate limits, completely free)
+        url: 'https://ethereum-sepolia-rpc.publicnode.com',
         chainId: '11155111' // Sepolia chain ID
     }
 };

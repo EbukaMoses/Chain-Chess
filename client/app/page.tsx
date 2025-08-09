@@ -7,8 +7,8 @@ import Link from 'next/link'
 import { CreateTournamentForm } from '../components/CreateTournamentForm'
 import { DeploymentHelper } from '../components/DeploymentHelper'
 import { TestIntegration } from '../components/TestIntegration'
-import { RPCConfigHelper } from '../components/RPCConfigHelper'
-import { TournamentDebugger } from '../components/TournamentDebugger'
+
+
 
 export default function Home() {
     const [error, setError] = useState('')
@@ -413,8 +413,7 @@ export default function Home() {
             {/* Deployment Helper */}
             <DeploymentHelper />
             <TestIntegration />
-            <RPCConfigHelper />
-            <TournamentDebugger />
+
         </div>
     )
 } 

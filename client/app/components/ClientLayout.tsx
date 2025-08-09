@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useContract } from '../../contexts/ContractContext';
 import { loadDeploymentConfig } from '../../lib/config';
 
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const [isWalletConnected, setIsWalletConnected] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
@@ -161,7 +162,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                                                 symbol: 'SEP',
                                                 decimals: 18
                                             },
-                                            rpcUrls: ['https://sepolia.infura.io/v3/'],
+                                            rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
                                             blockExplorerUrls: ['https://sepolia.etherscan.io/']
                                         }],
                                     });

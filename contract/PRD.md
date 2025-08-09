@@ -1,27 +1,164 @@
-i want to build a chess game platform on chain, it will be a platform where organizations can come and create a game competition with price pool  for user with start and end date and they will specify the number of users they want for the tournament it must be a number divisible by four as each group with contain just four members.
-Users can come and register for a particular tournament , there will be a four players in each group. Members of each group will compete against each other and anyone that wins will have 3 point while if they draw it will be a 1 point each for the both players. At the end of the group stage  of the compete the first two players in each team will advance to compete with others players from another group as players will be arrange in groups base on the player with the highest point
+Product Requirements Document (PRD)
+Product Title:
 
-also add that when create game for tournament a price pool should be add using stable coin so that any player that come 1st, 2nd & 3rd will get 50%, 30%and 20% of the pool price respectively
+On-Chain Chess Tournament Platform
+Objective
 
-The frontend of the platform will be in a way that users can register to participant in a particular tuornment and users should be allowed to enter as many tuornment as possible but no one user can enter same tuornment twices.
+Build a blockchain-based chess competition platform where organizations create and manage tournaments with a stablecoin prize pool. Users can register for multiple tournaments, participate in group-based competition, and winnings are distributed transparently on-chain.
+Key Features
+1. Tournament Creation (For Organizations)
 
+    Tournament Setup: Organizations can create chess tournaments, specifying:
 
-Creating a tournament
-Name your tournament
-Fetch creators wallet address as the owner of the tournament
-Add description as a guide for the game
-Select how many players you want for the tournament but must be divisible by 4
-Select a start and end date for the tournament
-Add a price pool that will be share among the 1st, 2nd & 3rd position respectively in 50%, 30%, 20% ration
-Participants should be grouped in four players per group
-Players participating in any tournament
-Get their wallet address
-Get their game name, country
-Randomly fit them in a group
+        Tournament name & description
 
+        Start and end dates
 
-Rules of the game
-Each player in each group play with eachother and anybody who wins gets three point and the loser gets zero point
-At the end of the group stage where players have palyed with each other in a group players will be arranged in an ascending order base on the player with the highest point.
-The two top players in each group will procced to the next rounds where players will be randomly paired to player and loser will be drop while winner goes up to contest with other winner till tils left with tow players to play for final
-At the end of the game the 1st, 2nd, 3rd player gets their wallet address created with their their percentage of their money
+        Prize pool (must be funded with a stablecoin, e.g., USDC/USDT)
+
+        Total number of players (must be divisible by four)
+
+    Prize Distribution:
+
+        Winner: 50% of prize pool
+
+        2nd Place: 30% of prize pool
+
+        3rd Place: 20% of prize pool
+
+    User Cap: Must specify the exact number of participants (divisible by four for group allocation).
+
+2. User Registration and Participation
+
+    Registration Workflow:
+
+        Users can browse available tournaments.
+
+        Users can register for any number of tournaments, but only once per tournament.
+
+        Registration closes when the participant cap is reached or at tournament start.
+
+    Verification:
+
+        Blockchain wallet sign-in to confirm user uniqueness.
+
+        Enforce: No duplicate entry for a user in the same tournament.
+
+3. Group Stage Mechanics
+
+    Grouping Logic:
+
+        Players are randomly allocated into groups of 4.
+
+        Each group plays a round-robin: Each member plays the other 3 members.
+
+    Scoring System:
+
+        Win = 3 points
+
+        Draw = 1 point per player
+
+        Loss = 0 points
+
+    Advancement:
+
+        Top 2 players (by points, then tiebreaker via win count or head-to-head result) from each group advance to the next knockout or mixed group stage.
+
+        Subsequent rounds: Re-grouping based on points/seed.
+
+4. Tournament Progression
+
+    Automated Rounds:
+
+        After group stage, advance top players into new groups or brackets as configured.
+
+        Continue until final placements (1st, 2nd, 3rd) are determined.
+
+    Match Recording:
+
+        Chess matches played on-chain or results validated on-chain.
+
+        All scores and brackets are public and immutable.
+
+5. Prize Distribution
+
+    Stablecoin Payouts:
+
+        Prizes distributed on-chain, automatically at tournament end.
+
+        1st: 50%, 2nd: 30%, 3rd: 20% (direct to winners’ wallets).
+
+6. Frontend & User Experience
+
+    User Dashboard:
+
+        See active/joined tournaments, standings, and match history.
+
+        Register for upcoming tournaments.
+
+    Tournament Pages:
+
+        List of registered players, group assignments, match results, and prize pool status.
+
+    Game Interface:
+
+        Play matches directly or connect to approved chess engine.
+
+        Results uploaded or verified on-chain.
+
+    Notifications:
+
+        Alerts for match schedules, round advancement, and prize claims.
+
+Additional Technical Requirements
+
+    Smart Contract Logic:
+
+        Tournament management (creation, registration, group allocation, match result submission, prize payout)
+
+    Stablecoin Integration:
+
+        Accept stablecoin for prize pools; handle payouts in same currency.
+
+    Security:
+
+        Audit smart contracts for safety of funds and fairness of logic.
+
+    Transparency:
+
+        All tournament data available on-chain or via explorer.
+
+Constraints & Acceptance Criteria
+
+    Player Entry: No user can join the same tournament more than once.
+
+    Group Size: All tournaments must have participant numbers divisible by 4.
+
+    Prize Pool: Only stablecoin-backed tournaments, with automated proportionate payout.
+
+    Scalable Frontend: Must easily support browsing and joining multiple tournaments.
+
+User Stories
+
+    As an organization, I can create a chess tournament with a stablecoin prize pool and specify participant details.
+
+    As a user, I can browse and join multiple chess tournaments, but never enter a single tournament more than once.
+
+    After playing the group stage, I can see my standings and, if I advance, join the next round.
+
+    If I win or place in the top 3, I receive the correct share of the prize pool automatically in my wallet.
+
+Visual Representation
+
+    Tournament Dashboard (Organizations & Users)
+
+    Group Draws and Match Schedules
+
+    On-chain Wallet Integration for Prize Distribution
+
+This PRD can be shared with development teams for further estimation and design. If you require more technical detail (e.g., smart contract structures), specify your stack or target chain for deeper technical documentation.
+
+Deployment Summary:
+===================
+Mock USDC: 0x3685B9BA92508144B8894c51632669368Bae8307
+Chess Tournament: 0x8Bfcfc940A928E474eb1e4abA412696cefF274e2
